@@ -190,6 +190,17 @@ bool GAP_isa(Obj rec)
   return getter.isa(rec);
 }
 
+class GAP_convertor
+{
+  Obj o;
+public:
+  GAP_convertor(Obj _o) : o(_o) { }
+  
+  template<typename T>
+  operator T()
+  { return GAP_get<T>(o); }
+};
+
 Obj GAP_get_rec(Obj rec, UInt n)
 {
     if(!IS_REC(rec))

@@ -44,7 +44,7 @@ function(incode, funcname, args)
   
   stream := OutputTextString(outcode, true);
 
-  PrintTo(stream, "#include \"include_gap_headers.h\"\n");
+  PrintTo(stream, "#include \"gap_helper.h\"\n");
   PrintTo(stream, incode,"\n");
   PrintTo(stream, "extern \"C\" {\n");
   
