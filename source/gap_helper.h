@@ -2,8 +2,7 @@
 #define GAP_HELPER_PNFRE
 
 #include "src/compiled.h"
-
-#include "c_to_cpp.h"
+#include "function_objs.h"
 
 #include <stdexcept>
 #include <string>
@@ -94,6 +93,21 @@ struct GAP_getter<int>
     }
 };
 
+template<typename T, typename Container>
+void fillContainer(Obj rec, Container& v)
+{
+  if(!(IS_SMALL_LIST(rec)))
+    throw GAPException("Invalid attempt to read list");
+  int len = LEN_LIST(rec);
+
+  v.reserve(len);
+  GAP_getter<T> getter;
+  for(int i = 1; i <= len; ++i)
+  {
+      v.push_back(getter(ELM_LIST(rec, i)));
+  }
+}
+
 // This case, and next one, handle arrays with and without holes
 template<typename T>
 struct GAP_getter<vec1<T> >
@@ -103,20 +117,45 @@ struct GAP_getter<vec1<T> >
     
     vec1<T> operator()(Obj rec) const
     {
-        if(!isa(rec))
-            throw GAPException("Invalid attempt to read list");
-        int len = LEN_LIST(rec);
-
-        vec1<T> v;
-        v.reserve(len);
-        GAP_getter<T> getter;
-        for(int i = 1; i <= len; ++i)
-        {
-            v.push_back(getter(ELM_LIST(rec, i)));
-        }
-        return v;
+      vec1<T> v;
+      fillContainer<T>(rec, v);
+      return v;
     }
 };
+
+template<typename T>
+struct GAP_getter<std::vector<T> >
+{
+    bool isa(Obj recval) const
+    { return IS_SMALL_LIST(recval); }
+    
+    std::vector<T> operator()(Obj rec) const
+    {
+      std::vector<T> v;
+      fillContainer<T>(rec, v);
+      return v;
+    }
+};
+
+
+template<typename T, typename Container>
+void fillContainerWithHoles(Obj rec, Container& v)
+{
+  if(!(IS_SMALL_LIST(rec)))
+      throw GAPException("Invalid attempt to read list");
+  int len = LEN_LIST(rec);
+
+  v.reserve(len);
+  GAP_getter<T> getter;
+  for(int i = 1; i <= len; ++i)
+  {
+      if(ISB_LIST(rec, i))
+      { v.push_back(getter(ELM_LIST(rec, i))); }
+      else
+      { v.push_back(optional<T>()); }
+  }
+  return v;
+}
 
 template<typename T>
 struct GAP_getter<vec1<optional<T> > >
@@ -126,20 +165,22 @@ struct GAP_getter<vec1<optional<T> > >
     
     vec1<optional<T> > operator()(Obj rec) const
     {
-        if(!isa(rec))
-            throw GAPException("Invalid attempt to read list");
-        int len = LEN_LIST(rec);
-
         vec1<optional<T> > v;
-        v.reserve(len);
-        GAP_getter<T> getter;
-        for(int i = 1; i <= len; ++i)
-        {
-            if(ISB_LIST(rec, i))
-            { v.push_back(getter(ELM_LIST(rec, i))); }
-            else
-            { v.push_back(optional<T>()); }
-        }
+        fillContainerWithHoles<T>(rec, v);
+        return v;
+    }
+};
+
+template<typename T>
+struct GAP_getter<std::vector<optional<T> > >
+{
+    bool isa(Obj recval) const
+    { return IS_SMALL_LIST(recval); }
+    
+    std::vector<optional<T> > operator()(Obj rec) const
+    {
+        std::vector<optional<T> > v;
+        fillContainerWithHoles<T>(rec, v);
         return v;
     }
 };
@@ -381,7 +422,7 @@ Obj GAP_callFunction(GAPFunction fun, Obj arg1, Obj arg2, Obj arg3)
 
 // Register and deregister objects so they do not get garbage collected
 
-
+/*
 void GAP_addRef(Obj o)
 {
     GAP_callFunction(FunObj_addRef, o);
@@ -395,7 +436,7 @@ bool GAP_checkRef(Obj o)
 void GAP_clearRefs()
 {
     GAP_callFunction(FunObj_clearRefs);
-}
+}*/
 
 void GAP_print(const std::string& s)
 { Pr(s.c_str(), 0, 0); }

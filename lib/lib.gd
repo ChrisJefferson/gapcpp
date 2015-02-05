@@ -14,7 +14,10 @@
 ##
 ##
 
-DeclareOperation("ConstructMethod", [IsString, IsString, IsPosInt]);
+DeclareInfoClass("InfoGAPcpp");
+SetInfoLevel(InfoGAPcpp, 2);
+
+DeclareOperation("ConstructMethod", [IsString, IsString, IsString, IsPosInt]);
 
 DeclareOperation("CompileMethod", [IsString, IsString, IsPosInt]);
 

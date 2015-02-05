@@ -36,8 +36,8 @@ LoadPackage("io");
 ##  </Description>
 ##  </ManSection>
 ##  <#/GAPDoc>
-InstallMethod(ConstructMethod, [IsString, IsString, IsPosInt],
-function(incode, funcname, args)
+InstallMethod(ConstructMethod, [IsString, IsString, IsString, IsPosInt],
+function(incode, retname, funcname, args)
   local outcode, stream, i;
   
   outcode := "";
@@ -56,17 +56,17 @@ function(incode, funcname, args)
   PrintTo(stream, ") {\n");
   PrintTo(stream, "(void)self;\n");
   
-  PrintTo(stream, "return ", funcname, "(");
+  PrintTo(stream, "return GAP_make(", funcname, "(");
   for i in [1..args] do
     if i > 1 then PrintTo(stream, ", "); fi;
-    PrintTo(stream, "arg", String(i));
+    PrintTo(stream, "GAP_convertor(arg", String(i),")");
   od;
-  PrintTo(stream, ");\n");
+  PrintTo(stream, "));\n");
   
   PrintTo(stream, "}\n");
   
   PrintTo(stream, "static StructGVarFunc GVarFuncs [] = {\n");
-  PrintTo(stream, "{ \"",funcname,"\",",
+  PrintTo(stream, "{ \"",retname,"\",",
                   String(args),
                   ", \"...\", ",
                   "(UInt**(*)())Func",funcname,
@@ -117,15 +117,31 @@ function(incode, funcname, args)
   return outcode;
 end);
 
+_GAPCPP_Method := 1;
+
 InstallMethod(CompileMethod, [IsString, IsString, IsPosInt],
 function(incode, funcname, args)
-  local compilecode, script, ret;
+  local compilecode, script, ret, splitout, errorout, retname;
   
-  compilecode := ConstructMethod(incode, funcname, args);  
+  _GAPCPP_Method := _GAPCPP_Method + 1;
+  
+  retname := Concatenation("_GAPCPP_Import", String(_GAPCPP_Method));
+  compilecode := ConstructMethod(incode, retname, funcname, args);  
   script := Filename(DirectoriesPackageLibrary("gapcpp"), "../build_lib.sh");  
   ret := IO_PipeThroughWithError(script, [], compilecode);
-
-  return ret;
+  
+  
+  if ret.status.status <> 0 then
+    Error(Concatenation("Failed to compile!\n","stderr = ",ret.err,
+                              "\n stdout = ",ret.out));
+    return ret;
+  else
+    if ret.err <> "" then
+      Info(InfoGAPcpp, 2, ret.err);
+    splitout := SplitString(ret.out, "\n");
+    LoadDynamicModule(Concatenation(splitout[Size(splitout)], "/source.so"));
+    return EvalString(retname);
+  fi;
 end);
 
 #E  files.gi  . . . . . . . . . . . . . . . . . . . . . . . . . . . ends here
