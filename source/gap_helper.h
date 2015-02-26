@@ -6,6 +6,9 @@
 
 #include <stdexcept>
 #include <string>
+#include <vector>
+#include <deque>
+#include <list>
 #include "library/vec1.hpp"
 #include "library/algorithms.hpp"
 #include "library/perm.hpp"
@@ -100,7 +103,6 @@ void fillContainer(Obj rec, Container& v)
     throw GAPException("Invalid attempt to read list");
   int len = LEN_LIST(rec);
 
-  v.reserve(len);
   GAP_getter<T> getter;
   for(int i = 1; i <= len; ++i)
   {
@@ -132,6 +134,34 @@ struct GAP_getter<std::vector<T> >
     std::vector<T> operator()(Obj rec) const
     {
       std::vector<T> v;
+      fillContainer<T>(rec, v);
+      return v;
+    }
+};
+
+template<typename T>
+struct GAP_getter<std::deque<T> >
+{
+    bool isa(Obj recval) const
+    { return IS_SMALL_LIST(recval); }
+    
+    std::deque<T> operator()(Obj rec) const
+    {
+      std::deque<T> v;
+      fillContainer<T>(rec, v);
+      return v;
+    }
+};
+
+template<typename T>
+struct GAP_getter<std::list<T> >
+{
+    bool isa(Obj recval) const
+    { return IS_SMALL_LIST(recval); }
+    
+    std::list<T> operator()(Obj rec) const
+    {
+      std::list<T> v;
       fillContainer<T>(rec, v);
       return v;
     }
@@ -184,6 +214,35 @@ struct GAP_getter<std::vector<optional<T> > >
         return v;
     }
 };
+
+template<typename T>
+struct GAP_getter<std::deque<optional<T> > >
+{
+    bool isa(Obj recval) const
+    { return IS_SMALL_LIST(recval); }
+    
+    std::deque<optional<T> > operator()(Obj rec) const
+    {
+        std::deque<optional<T> > v;
+        fillContainerWithHoles<T>(rec, v);
+        return v;
+    }
+};
+
+template<typename T>
+struct GAP_getter<std::list<optional<T> > >
+{
+    bool isa(Obj recval) const
+    { return IS_SMALL_LIST(recval); }
+    
+    std::list<optional<T> > operator()(Obj rec) const
+    {
+        std::list<optional<T> > v;
+        fillContainerWithHoles<T>(rec, v);
+        return v;
+    }
+};
+
 
 template<>
 struct GAP_getter<Permutation>
@@ -317,6 +376,52 @@ struct GAP_maker<vec1<T> >
 
         return list;
     }
+};
+
+template<typename T>
+Obj gap_make_container(const T& v)
+{
+    size_t s = v.size();
+    if(s == 0)
+    {
+      Obj l = NEW_PLIST(T_PLIST_EMPTY, 0);
+      SET_LEN_PLIST(l, 0);
+      CHANGED_BAG(l);
+      return l;
+    }
+    Obj list = NEW_PLIST(T_PLIST_DENSE, s);
+    SET_LEN_PLIST(list, s);
+    CHANGED_BAG(list);
+    GAP_maker<typename T::value_type> m;
+    typename T::const_iterator it = v.begin();
+    for(size_t i = 0; i < v.size(); ++i, ++it)
+    {
+        SET_ELM_PLIST(list, i+1, m(*it));
+        CHANGED_BAG(list);
+    }
+
+    return list;
+}
+
+template<typename T>
+struct GAP_maker<std::vector<T> >
+{
+    Obj operator()(const std::vector<T>& v) const
+    { return gap_make_container(v); }
+};
+
+template<typename T>
+struct GAP_maker<std::deque<T> >
+{
+    Obj operator()(const std::deque<T>& v) const
+    { return gap_make_container(v); }
+};
+
+template<typename T>
+struct GAP_maker<std::list<T> >
+{
+    Obj operator()(const std::list<T>& v) const
+    { return gap_make_container(v); }
 };
 
 template<typename T, typename U>
