@@ -138,6 +138,7 @@ function(incode, funcname, args)
   else
     if ret.err <> "" then
       Info(InfoGAPcpp, 2, ret.err);
+    fi;
     splitout := SplitString(ret.out, "\n");
     LoadDynamicModule(Concatenation(splitout[Size(splitout)], "/source.so"));
     return EvalString(retname);
