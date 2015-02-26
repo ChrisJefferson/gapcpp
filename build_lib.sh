@@ -14,7 +14,7 @@ cat > ${mytmpdir}/source.cc
 
 GAC=${GAPPATH}/bin/${GAPARCH}/gac
 
-MYCFLAGS="-Wall -Wextra -g -Isource -Wno-missing-field-initializers -O"
+MYCFLAGS="-Wall -Wextra -g -I${MY_PATH}/source -Wno-missing-field-initializers -O"
 
 BUILDSTUFF="-L ${CPPLIB} -o ${mytmpdir}/source.so -d ${mytmpdir}/source.cc"
 
