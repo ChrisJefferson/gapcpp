@@ -35,9 +35,9 @@ Persons := [
   ),
 ],
 
-PackageWWWHome := "http://gap-system.github.io/ferret/",
+PackageWWWHome := "http://ChrisJefferson.github.io/gapcpp/",
 
-ArchiveURL     := Concatenation("https://github.com/gap-system/ferret/",
+ArchiveURL     := Concatenation("https://github.com/gap-system/gapcpp/",
                                 "releases/download/v", ~.Version,
                                 "/ferret-", ~.Version),
 README_URL     := Concatenation( ~.PackageWWWHome, "README" ),

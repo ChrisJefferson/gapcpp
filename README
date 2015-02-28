@@ -1,3 +1,4 @@
-The GAP 4 package `ferret'
+The GAP 4 package `gapcpp'
 ==============================
 
+Provides an easy way to link C++ code into GAP
