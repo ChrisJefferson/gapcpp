@@ -44,7 +44,7 @@ function(incode, retname, funcname, args)
   
   stream := OutputTextString(outcode, true);
 
-  PrintTo(stream, "#include \"gap_helper.h\"\n");
+  PrintTo(stream, "#include \"gap_cpp_mapping.hpp\"\n");
   PrintTo(stream, incode,"\n");
   PrintTo(stream, "extern \"C\" {\n");
   
@@ -55,13 +55,17 @@ function(incode, retname, funcname, args)
   
   PrintTo(stream, ") {\n");
   PrintTo(stream, "(void)self;\n");
-  
+  PrintTo(stream, "try {\n");
   PrintTo(stream, "return GAP_make(", funcname, "(");
   for i in [1..args] do
     if i > 1 then PrintTo(stream, ", "); fi;
     PrintTo(stream, "GAP_convertor(arg", String(i),")");
   od;
   PrintTo(stream, "));\n");
+  PrintTo(stream, "} catch(const GAPException& e) {\n");
+  PrintTo(stream, "Pr(e.what(), 0, 0);\n");
+  PrintTo(stream, "return Fail;\n");
+  PrintTo(stream, "}\n");
   
   PrintTo(stream, "}\n");
   

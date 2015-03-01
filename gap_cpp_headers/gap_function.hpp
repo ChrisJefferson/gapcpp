@@ -1,3 +1,6 @@
+#ifndef GAP_FUNCTION_HPPQR
+#define GAP_FUNCTION_HPPQR
+
 #include <string>
 
 class GAPFunction
@@ -7,6 +10,9 @@ class GAPFunction
 
 public:
     GAPFunction() : obj(0), name()
+    { }
+    
+    GAPFunction(std::string s) : obj(0), name(s)
     { }
 
     void setName(std::string s)
@@ -22,3 +28,5 @@ public:
         return obj;
     }
 };
+
+#endif

@@ -1,18 +1,21 @@
 #ifndef GAP_HELPER_PNFRE
 #define GAP_HELPER_PNFRE
 
-#include "src/compiled.h"
-#include "function_objs.h"
-
 #include <stdexcept>
 #include <string>
+#include <exception>
 #include <vector>
 #include <deque>
 #include <list>
-#include "library/vec1.hpp"
-#include "library/algorithms.hpp"
-#include "library/perm.hpp"
-#include "library/optional.hpp"
+
+// We have to include this to get around problems with the 'extern C' wrapping of src/compiled.h,
+// which includes gmp, which in C++ mode has some C++ templates.
+#include "include_gap_headers.hpp"
+#include "gap_exception.hpp"
+#include "gap_function.hpp"
+
+#include "vec1.hpp"
+#include "optional.hpp"
 
 
 namespace GAPdetail
@@ -96,18 +99,22 @@ struct GAP_getter<int>
     }
 };
 
-template<typename T, typename Container>
-void fillContainer(Obj rec, Container& v)
-{
-  if(!(IS_SMALL_LIST(rec)))
-    throw GAPException("Invalid attempt to read list");
-  int len = LEN_LIST(rec);
 
-  GAP_getter<T> getter;
-  for(int i = 1; i <= len; ++i)
-  {
-      v.push_back(getter(ELM_LIST(rec, i)));
-  }
+template<typename Con>
+Con fill_container(Obj rec)
+{
+    if(!(IS_SMALL_LIST(rec)))
+        throw GAPException("Invalid attempt to read list");
+    int len = LEN_LIST(rec);
+
+    Con v;
+    typedef typename Con::value_type T;
+    GAP_getter<T> getter;
+    for(int i = 1; i <= len; ++i)
+    {
+        v.push_back(getter(ELM_LIST(rec, i)));
+    }
+    return v;
 }
 
 // This case, and next one, handle arrays with and without holes
@@ -118,11 +125,7 @@ struct GAP_getter<vec1<T> >
     { return IS_SMALL_LIST(recval); }
     
     vec1<T> operator()(Obj rec) const
-    {
-      vec1<T> v;
-      fillContainer<T>(rec, v);
-      return v;
-    }
+    { return fill_container<vec1<T> >(rec); }
 };
 
 template<typename T>
@@ -132,11 +135,7 @@ struct GAP_getter<std::vector<T> >
     { return IS_SMALL_LIST(recval); }
     
     std::vector<T> operator()(Obj rec) const
-    {
-      std::vector<T> v;
-      fillContainer<T>(rec, v);
-      return v;
-    }
+    { return fill_container<std::vector<T> >(rec); }
 };
 
 template<typename T>
@@ -146,11 +145,7 @@ struct GAP_getter<std::deque<T> >
     { return IS_SMALL_LIST(recval); }
     
     std::deque<T> operator()(Obj rec) const
-    {
-      std::deque<T> v;
-      fillContainer<T>(rec, v);
-      return v;
-    }
+    { return fill_container<std::deque<T> >(rec); }
 };
 
 template<typename T>
@@ -160,22 +155,18 @@ struct GAP_getter<std::list<T> >
     { return IS_SMALL_LIST(recval); }
     
     std::list<T> operator()(Obj rec) const
-    {
-      std::list<T> v;
-      fillContainer<T>(rec, v);
-      return v;
-    }
+    { return fill_container<std::list<T> >(rec); }
 };
 
 
-template<typename T, typename Container>
-void fillContainerWithHoles(Obj rec, Container& v)
+template<typename Con, typename T>
+Con fill_optional_container(Obj rec)
 {
   if(!(IS_SMALL_LIST(rec)))
       throw GAPException("Invalid attempt to read list");
   int len = LEN_LIST(rec);
 
-  v.reserve(len);
+  Con v;
   GAP_getter<T> getter;
   for(int i = 1; i <= len; ++i)
   {
@@ -194,11 +185,7 @@ struct GAP_getter<vec1<optional<T> > >
     { return IS_SMALL_LIST(recval); }
     
     vec1<optional<T> > operator()(Obj rec) const
-    {
-        vec1<optional<T> > v;
-        fillContainerWithHoles<T>(rec, v);
-        return v;
-    }
+    { return fill_optional_container<vec1<optional<T> >, T>(rec); }
 };
 
 template<typename T>
@@ -208,11 +195,7 @@ struct GAP_getter<std::vector<optional<T> > >
     { return IS_SMALL_LIST(recval); }
     
     std::vector<optional<T> > operator()(Obj rec) const
-    {
-        std::vector<optional<T> > v;
-        fillContainerWithHoles<T>(rec, v);
-        return v;
-    }
+    { return fill_optional_container<std::vector<optional<T> >, T>(rec); }
 };
 
 template<typename T>
@@ -222,11 +205,7 @@ struct GAP_getter<std::deque<optional<T> > >
     { return IS_SMALL_LIST(recval); }
     
     std::deque<optional<T> > operator()(Obj rec) const
-    {
-        std::deque<optional<T> > v;
-        fillContainerWithHoles<T>(rec, v);
-        return v;
-    }
+    { return fill_optional_container<std::deque<optional<T> >, T>(rec); }
 };
 
 template<typename T>
@@ -236,43 +215,9 @@ struct GAP_getter<std::list<optional<T> > >
     { return IS_SMALL_LIST(recval); }
     
     std::list<optional<T> > operator()(Obj rec) const
-    {
-        std::list<optional<T> > v;
-        fillContainerWithHoles<T>(rec, v);
-        return v;
-    }
+    { return fill_optional_container<std::list<optional<T> >, T>(rec); }
 };
 
-
-template<>
-struct GAP_getter<Permutation>
-{
-    Permutation operator()(Obj rec) const
-    {
-        if(TNUM_OBJ(rec) == T_PERM2)
-        {
-            UInt deg = DEG_PERM2(rec);
-            Permutation p = getRawPermutation(deg);
-            vec1<int> v(deg);
-            UInt2* ptr = ADDR_PERM2(rec);
-            for(UInt i = 0; i < deg; ++i)
-                p.raw(i+1) = ptr[i] + 1;
-            D_ASSERT(p.validate());
-            return p;
-        }
-        else if(TNUM_OBJ(rec) == T_PERM4)
-        {
-            UInt deg = DEG_PERM4(rec);
-            Permutation p = getRawPermutation(deg);
-            UInt4* ptr = ADDR_PERM4(rec);
-            for(UInt i = 0; i < deg; ++i)
-                p.raw(i+1) = ptr[i] + 1;
-            return p;
-        }
-        else
-            throw GAPException("Invalid attempt to read perm");
-    }
-};
 
 }
 
@@ -289,17 +234,6 @@ bool GAP_isa(Obj rec)
   GAPdetail::GAP_getter<T> getter;
   return getter.isa(rec);
 }
-
-class GAP_convertor
-{
-  Obj o;
-public:
-  GAP_convertor(Obj _o) : o(_o) { }
-  
-  template<typename T>
-  operator T()
-  { return GAP_get<T>(o); }
-};
 
 Obj GAP_get_rec(Obj rec, UInt n)
 {
@@ -378,52 +312,6 @@ struct GAP_maker<vec1<T> >
     }
 };
 
-template<typename T>
-Obj gap_make_container(const T& v)
-{
-    size_t s = v.size();
-    if(s == 0)
-    {
-      Obj l = NEW_PLIST(T_PLIST_EMPTY, 0);
-      SET_LEN_PLIST(l, 0);
-      CHANGED_BAG(l);
-      return l;
-    }
-    Obj list = NEW_PLIST(T_PLIST_DENSE, s);
-    SET_LEN_PLIST(list, s);
-    CHANGED_BAG(list);
-    GAP_maker<typename T::value_type> m;
-    typename T::const_iterator it = v.begin();
-    for(size_t i = 0; i < v.size(); ++i, ++it)
-    {
-        SET_ELM_PLIST(list, i+1, m(*it));
-        CHANGED_BAG(list);
-    }
-
-    return list;
-}
-
-template<typename T>
-struct GAP_maker<std::vector<T> >
-{
-    Obj operator()(const std::vector<T>& v) const
-    { return gap_make_container(v); }
-};
-
-template<typename T>
-struct GAP_maker<std::deque<T> >
-{
-    Obj operator()(const std::deque<T>& v) const
-    { return gap_make_container(v); }
-};
-
-template<typename T>
-struct GAP_maker<std::list<T> >
-{
-    Obj operator()(const std::list<T>& v) const
-    { return gap_make_container(v); }
-};
-
 template<typename T, typename U>
 struct GAP_maker<std::pair<T,U> >
 {
@@ -444,20 +332,7 @@ struct GAP_maker<std::pair<T,U> >
     }
 };
 
-template<>
-struct GAP_maker<Permutation>
-{
-    Obj operator()(const Permutation& p) const
-    {
-        UInt4 deg = p.size();
-        // ignore tperm2 for now.
-        Obj prod = NEW_PERM4(deg);
-        UInt4* pt = ADDR_PERM4(prod);
-        for(UInt i = 0; i < deg; ++i)
-            pt[i] = p[i+1] - 1;
-        return prod;
-    }
-};
+
 
 }
 
@@ -481,67 +356,75 @@ Obj GAP_getGlobal(const char* name)
 // we have to be more explicit with the types of our functions.
 Obj GAP_callFunction(GAPFunction fun)
 {
-    timing_start_GAP_call(fun.name);
     typedef Obj(*F)(Obj);
     Obj funobj = fun.getObj();
     ObjFunc hdlrfunc = HDLR_FUNC(funobj,0);
     Obj ret = reinterpret_cast<F>(hdlrfunc)(funobj);
-    timing_end_GAP_call();
     return ret;
 }
 
 Obj GAP_callFunction(GAPFunction fun, Obj arg1)
 {
-    timing_start_GAP_call(fun.name);
     typedef Obj(*F)(Obj,Obj);
     Obj funobj = fun.getObj();
     ObjFunc hdlrfunc = HDLR_FUNC(funobj,1);
     Obj ret = reinterpret_cast<F>(hdlrfunc)(funobj, arg1);
-    timing_end_GAP_call();
     return ret;
 }
 
 Obj GAP_callFunction(GAPFunction fun, Obj arg1, Obj arg2)
 {
-    timing_start_GAP_call(fun.name);
     typedef Obj(*F)(Obj,Obj, Obj);
     Obj funobj = fun.getObj();
     ObjFunc hdlrfunc = HDLR_FUNC(funobj,2);
     Obj ret = reinterpret_cast<F>(hdlrfunc)(funobj, arg1, arg2);
-    timing_end_GAP_call();
     return ret;
 }
 
 Obj GAP_callFunction(GAPFunction fun, Obj arg1, Obj arg2, Obj arg3)
 {
-    timing_start_GAP_call(fun.name);
     typedef Obj(*F)(Obj,Obj, Obj, Obj);
     Obj funobj = fun.getObj();
     ObjFunc hdlrfunc = HDLR_FUNC(funobj,3);
     Obj ret = reinterpret_cast<F>(hdlrfunc)(funobj, arg1, arg2, arg3);
-    timing_end_GAP_call();
     return ret;
 }
 
-
+struct GAP_convertor
+{
+    Obj o;
+    
+    GAP_convertor(Obj _o) : o(_o) { }
+    
+    template<typename T>
+    operator T()
+    {
+        if(!GAP_isa<T>(o))
+            throw GAPException("Failed to map GAP object to C++");
+        return GAP_get<T>(o);
+    }
+};
 
 // Register and deregister objects so they do not get garbage collected
 
-/*
+
 void GAP_addRef(Obj o)
 {
-    GAP_callFunction(FunObj_addRef, o);
+    static GAPFunction addRef("_YAPB_addRef");
+    GAP_callFunction(addRef, o);
 }
 
 bool GAP_checkRef(Obj o)
 {
-    return GAP_get<bool>(GAP_callFunction(FunObj_checkRef, o));
+    static GAPFunction checkRef("_YAPB_checkRef");
+    return GAP_get<bool>(GAP_callFunction(checkRef, o));
 }
 
 void GAP_clearRefs()
 {
-    GAP_callFunction(FunObj_clearRefs);
-}*/
+    static GAPFunction clearRefs("_YAPB_clearRefs");
+    GAP_callFunction(clearRefs);
+}
 
 void GAP_print(const std::string& s)
 { Pr(s.c_str(), 0, 0); }
