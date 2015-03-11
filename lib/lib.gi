@@ -36,7 +36,7 @@ LoadPackage("io");
 ##  </Description>
 ##  </ManSection>
 ##  <#/GAPDoc>
-InstallMethod(ConstructMethod, [IsString, IsString, IsString, IsPosInt],
+InstallMethod(ConstructMethod, [IsString, IsString, IsString, IsInt],
 function(incode, retname, funcname, args)
   local outcode, stream, i;
   
@@ -123,7 +123,7 @@ end);
 
 _GAPCPP_Method := 1;
 
-InstallMethod(CompileMethod, [IsString, IsString, IsPosInt],
+InstallMethod(CompileMethod, [IsString, IsString, IsInt],
 function(incode, funcname, args)
   local compilecode, script, ret, splitout, errorout, retname;
   

@@ -7,12 +7,15 @@
 #include <vector>
 #include <deque>
 #include <list>
+#include <utility>
 
 // We have to include this to get around problems with the 'extern C' wrapping of src/compiled.h,
 // which includes gmp, which in C++ mode has some C++ templates.
 #include "include_gap_headers.hpp"
+#include "gap_prototypes.hpp"
 #include "gap_exception.hpp"
 #include "gap_function.hpp"
+#include "gap_wrapping.hpp"
 
 #include "vec1.hpp"
 #include "optional.hpp"
@@ -117,6 +120,23 @@ Con fill_container(Obj rec)
     return v;
 }
 
+template<typename T, typename U>
+struct GAP_getter<std::pair<T, U> >
+{
+    bool isa(Obj recval) const
+    { return IS_SMALL_LIST(recval) && LEN_LIST(recval) == 2; }
+    
+    std::pair<T,U> operator()(Obj rec) const
+    { 
+      if(!isa(rec))
+        throw GAPException("Invalid attempt to read pair");
+      GAP_getter<T> get_T;
+      GAP_getter<U> get_U;
+      std::pair<T,U> p(get_T(ELM_LIST(rec, 1)), get_U(ELM_LIST(rec, 2)));
+      return p;
+    }
+};
+
 // This case, and next one, handle arrays with and without holes
 template<typename T>
 struct GAP_getter<vec1<T> >
@@ -137,6 +157,7 @@ struct GAP_getter<std::vector<T> >
     std::vector<T> operator()(Obj rec) const
     { return fill_container<std::vector<T> >(rec); }
 };
+
 
 template<typename T>
 struct GAP_getter<std::deque<T> >
@@ -219,6 +240,21 @@ struct GAP_getter<std::list<optional<T> > >
 };
 
 
+template<>
+struct GAP_getter<GAPRecord>
+{
+  bool isa(Obj recval) const
+  { return IS_REC(recval); }
+
+  GAPRecord operator()(Obj rec) const
+  {
+    if(!isa(rec))
+      throw GAPException("Not a record");
+
+    return GAPRecord(rec);
+  }
+};
+
 }
 
 template<typename T>
@@ -286,29 +322,54 @@ struct GAP_maker<bool>
 };
 
 template<typename T>
+Obj CopyContainerToGap(const T& v)
+{
+    size_t s = v.size();
+    if(s == 0)
+    {
+      Obj l = NEW_PLIST(T_PLIST_EMPTY, 0);
+      SET_LEN_PLIST(l, 0);
+      CHANGED_BAG(l);
+      return l;
+    }
+    Obj list = NEW_PLIST(T_PLIST_DENSE, s);
+    SET_LEN_PLIST(list, s);
+    CHANGED_BAG(list);
+    GAP_maker<typename T::value_type> m;
+    int pos = 1;
+    for(typename T::const_iterator it = v.begin(); it != v.end(); ++it, ++pos)
+    {
+        SET_ELM_PLIST(list, pos, m(*it));
+        CHANGED_BAG(list);
+    }
+
+    return list;
+}
+
+template<typename T>
 struct GAP_maker<vec1<T> >
 {
     Obj operator()(const vec1<T>& v) const
     {
-        size_t s = v.size();
-        if(s == 0)
-        {
-          Obj l = NEW_PLIST(T_PLIST_EMPTY, 0);
-          SET_LEN_PLIST(l, 0);
-          CHANGED_BAG(l);
-          return l;
-        }
-        Obj list = NEW_PLIST(T_PLIST_DENSE, s);
-        SET_LEN_PLIST(list, s);
-        CHANGED_BAG(list);
-        GAP_maker<T> m;
-        for(int i = 1; i <= v.size(); ++i)
-        {
-            SET_ELM_PLIST(list, i, m(v[i]));
-            CHANGED_BAG(list);
-        }
+        return CopyContainerToGap(v);
+    }
+};
 
-        return list;
+template<typename T>
+struct GAP_maker<std::vector<T> >
+{
+    Obj operator()(const std::vector<T>& v) const
+    {
+        return CopyContainerToGap(v);
+    }
+};
+
+template<>
+struct GAP_maker<std::string>
+{
+    Obj operator()(const std::string& ) const
+    {
+      abort();
     }
 };
 
@@ -332,7 +393,12 @@ struct GAP_maker<std::pair<T,U> >
     }
 };
 
-
+template<>
+struct GAP_maker<GAPRecord>
+{
+  Obj operator()(GAPRecord r) const
+  { return r.raw_obj(); }
+};
 
 }
 

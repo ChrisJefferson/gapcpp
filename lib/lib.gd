@@ -17,9 +17,9 @@
 DeclareInfoClass("InfoGAPcpp");
 SetInfoLevel(InfoGAPcpp, 2);
 
-DeclareOperation("ConstructMethod", [IsString, IsString, IsString, IsPosInt]);
+DeclareOperation("ConstructMethod", [IsString, IsString, IsString, IsInt]);
 
-DeclareOperation("CompileMethod", [IsString, IsString, IsPosInt]);
+DeclareOperation("CompileMethod", [IsString, IsString, IsInt]);
 
 
 
