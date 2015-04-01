@@ -12,6 +12,9 @@
 
 LoadPackage("io");
 
+
+ReadPackage( "gapcpp", "lib/helper_functions.g" );
+
 #############################################################################
 ##
 ##
@@ -132,7 +135,7 @@ function(incode, funcname, args)
   retname := Concatenation("_GAPCPP_Import", String(_GAPCPP_Method));
   compilecode := ConstructMethod(incode, retname, funcname, args);  
   script := Filename(DirectoriesPackageLibrary("gapcpp"), "../build_lib.sh");  
-  ret := IO_PipeThroughWithError(script, [], compilecode);
+  ret := IO_PipeThroughWithError_local(script, [], compilecode);
   
   
   if ret.status.status <> 0 then
