@@ -4,7 +4,7 @@
 if test -z $1; then
   GAPPATH=$(cd ../..; pwd); echo "Using ../.. as default GAP path";
 else
-  GAPPATH=$1;
+  GAPPATH=$(cd $1; pwd) 
 fi
 
 if ! test -e $GAPPATH/sysinfo.gap; then
