@@ -103,8 +103,6 @@ function(incode, retname, funcname, args)
   " /* preSave     = */ 0,\n",
   " /* postSave    = */ 0,\n",
   " /* postRestore = */ 0,\n",
-  " /* filename    = */ 0,\n",
-  " /* isGapRootRelative = */ 0\n",
   "};\n",
   "\n",
   "#ifndef EDIVSTATIC\n",
