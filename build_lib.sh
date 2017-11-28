@@ -12,7 +12,7 @@ cat > ${mytmpdir}/source.cc
 
 . ${MY_PATH}/gapcpp.vars
 
-GAC=${GAPPATH}/bin/${GAPARCH}/gac
+GAC=${GAPPATH}/gac
 
 MYCFLAGS="-Wall -Wextra -g -I${MY_PATH}/gap_cpp_headers -Wno-missing-field-initializers -O"
 
