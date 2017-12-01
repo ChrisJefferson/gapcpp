@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # usage: configure gappath
 # this script creates a `Makefile' from `Makefile.in'
 if test -z $1; then
@@ -17,7 +17,7 @@ fi
 
 echo "Architecture is $GAParch (from sysinfo.gap)"
 
-if ! test -e $GAPPATH/gac; then
+if ! [ -e "$GAPPATH/gac" ] ; then
   echo "Cannot find 'gac' at " $GAPPATH
   exit 1
 fi;
