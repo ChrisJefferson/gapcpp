@@ -1,17 +1,22 @@
 #!/usr/bin/env bash
+
+echo "New test"
+
 # usage: configure gappath
 # this script creates a `Makefile' from `Makefile.in'
-if test -z $1; then
-  GAPPATH=$(cd ../..; pwd); echo "Using ../.. as default GAP path";
+if test -z $1 ; then
+  GAPPATH=$(cd ../..; pwd)
+  echo "Using ../.. as default GAP path";
 else
   GAPPATH=$(cd $1; pwd) 
 fi
 
-if ! test -e $GAPPATH/sysinfo.gap; then
+if ! test -e $GAPPATH/sysinfo.gap ; then
   echo "Please give correct GAP path as argument (and make sure that GAP"
   echo "is already properly installed)."
   exit 1
 fi
+
 
 . $GAPPATH/sysinfo.gap
 
@@ -20,7 +25,7 @@ echo "Architecture is $GAParch (from sysinfo.gap)"
 if ! [ -e "$GAPPATH/gac" ] ; then
   echo "Cannot find 'gac' at " $GAPPATH
   exit 1
-fi;
+fi
 
 eval $(grep '^CC=' $GAPPATH/gac)
 
