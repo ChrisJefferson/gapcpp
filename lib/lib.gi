@@ -1,44 +1,8 @@
-#############################################################################
-##
-##
-#W  yapb.gi                Ferret Package                Chris Jefferson
-##
-##  Installation file for functions of the Ferret package.
-##
-#Y  Copyright (C) 2013-2014 University of St. Andrews, North Haugh,
-#Y                          St. Andrews, Fife KY16 9SS, Scotland
-##
-
-
 LoadPackage("io");
 
 
 ReadPackage( "gapcpp", "lib/helper_functions.g" );
 
-#############################################################################
-##
-##
-##  <#GAPDoc Label="ConStabilize">
-##  <ManSection>
-##  <Heading>ConStabilize</Heading>
-##  <Func Name="ConStabilize" Arg="object, action" Label="for an object and an action"/>
-##  <Func Name="ConStabilize" Arg="object, n" Label="for a transformation or partial perm"/>
-##  
-##  <Description>
-##  In the first form this represents the group which stabilises <A>object</A>
-##  under <A>action</A>.
-##  The currently allowed actions are OnSets, OnSetsSets, OnSetsDisjointSets,
-##  OnTuples, OnPairs and OnDirectedGraph.
-##
-##  In the second form it represents the stabilizer of a partial perm
-##  or transformation in the symmetric group on <A>n</A> points.
-##
-##  Both of these methods are for constructing arguments for the
-##  <Ref Func="Solve" /> method.
-##
-##  </Description>
-##  </ManSection>
-##  <#/GAPDoc>
 InstallMethod(ConstructMethod, [IsString, IsString, IsString, IsInt],
 function(incode, retname, funcname, args)
   local outcode, stream, i;
@@ -74,10 +38,15 @@ function(incode, retname, funcname, args)
   
   PrintTo(stream, "static StructGVarFunc GVarFuncs [] = {\n");
   PrintTo(stream, "{ \"",retname,"\",",
-                  String(args),
-                  ", \"...\", ",
+                  String(args),", \"");
+
+  for i in [1..args-1] do
+    PrintTo(stream, "arg,");
+  od;
+  PrintTo(stream, "arg");
+  PrintTo(stream, "\", ",
                   "(UInt**(*)())Func",funcname,
-                  ", \"...\" }, {0} };\n");
+                  ", \"nofile.c:1\" }, {0} };\n");
   
   PrintTo(stream, "static Int InitKernel (StructInitInfo* module)\n");
   PrintTo(stream, "{ (void)module; InitHdlrFuncsFromTable( GVarFuncs ); return 0; }\n");
