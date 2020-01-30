@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-echo "New test"
-
 # usage: configure gappath
 # this script creates a `Makefile' from `Makefile.in'
 if test -z $1 ; then
@@ -17,57 +15,15 @@ if ! test -e $GAPPATH/sysinfo.gap ; then
   exit 1
 fi
 
-
-. $GAPPATH/sysinfo.gap
-
-echo "Architecture is $GAParch (from sysinfo.gap)"
-
 if ! [ -e "$GAPPATH/gac" ] ; then
   echo "Cannot find 'gac' at " $GAPPATH
   exit 1
 fi
 
-if grep "^CC=" $GAPPATH/gac; then
-    eval $(grep '^CC=' $GAPPATH/gac)
-else
-    CC="$GAP_CC"
-fi;
-
-# Let's find a C++ standard library. In practice there are two.
-
-func_get_libname () {
-  for flag in -lstdc++ -llibc++; do
-    if echo "#include <vector>\n#include<string.h>\n#include<string>\n int main(void) { std::vector<int> v(5); }" | $CC $flag -x c++  -c - -o /dev/null 1>/dev/null 2>/dev/null; then
-        CPPLIB="$flag"
-        return 0
-    fi
-  done
-  echo "Cannot find working C++ standard library".
-  exit 1
-}
-
-func_get_libname
-
-# See if valgrind exists
-
-VALGRIND="valgrind -q"
-$VALGRIND --help 1>/dev/null 2>/dev/null || VALGRIND=
-
-
-sed -e "s|@GAPARCH@|$GAParch|g" \
-    -e "s|@DEBUGFLAGS@|$DEBUGFLAGS|g" \
-    -e "s|@VALGRIND@|$VALGRIND|g" \
-    -e "s|@GAPPATH@|$GAPPATH|g" \
-    -e "s|@CPPLIB@|$CPPLIB|g" \
+sed -e "s|@GAPPATH@|$GAPPATH|g" \
       Makefile.in > Makefile
 echo "Makefile successfully created."
 
 echo '#!/bin/bash' > gapcpp.vars
-echo export GAPARCH=\"$GAParch\" >> gapcpp.vars
-echo export CC=$CC >> gapcpp.vars
-echo export CXX=c++ >> gapcpp.vars
-echo export VALGRIND=\"$VALGRIND\" >> gapcpp.vars
-echo export DEBUGFLAGS=\"$DEBUGFLAGS\" >> gapcpp.vars
 echo export GAPPATH=\"$GAPPATH\" >> gapcpp.vars
-echo export GAPEXEC=\"$GAPPATH/bin/gap.sh -b\" >> gapcpp.vars
-echo export CPPLIB=\"$CPPLIB\" >> gapcpp.vars
+

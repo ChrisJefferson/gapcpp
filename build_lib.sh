@@ -16,7 +16,7 @@ GAC=${GAPPATH}/gac
 
 MYCFLAGS="-Wall -Wextra -g -I${MY_PATH}/gap_cpp_headers -Wno-pragmas -Wno-cast-function-type -Wno-unused-parameter -Wno-missing-field-initializers -O3 -march=native -mtune=native"
 
-BUILDSTUFF="-L ${CPPLIB} -o ${mytmpdir}/source.so -d ${mytmpdir}/source.cc"
+BUILDSTUFF=" -o ${mytmpdir}/source.so -d ${mytmpdir}/source.cc"
 
 ${GAC}  -p "${MYCFLAGS}"  ${BUILDSTUFF} -P "-Wl,-Bsymbolic"
 
