@@ -27,7 +27,11 @@ if ! [ -e "$GAPPATH/gac" ] ; then
   exit 1
 fi
 
-eval $(grep '^CC=' $GAPPATH/gac)
+if grep "^CC=" $GAPPATH/gac; then
+    eval $(grep '^CC=' $GAPPATH/gac)
+else
+    CC="$GAP_CC"
+fi;
 
 # Let's find a C++ standard library. In practice there are two.
 
