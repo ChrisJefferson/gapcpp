@@ -45,7 +45,9 @@ function(incode, retname, funcname, args)
   for i in [1..args-1] do
     PrintTo(stream, "arg,");
   od;
-  PrintTo(stream, "arg");
+  if args > 0 then
+      PrintTo(stream, "arg");
+  fi;
   PrintTo(stream, "\", ",
                   "(UInt**(*)())Func",funcname,
                   ", \"nofile.c:", COMPILE_COUNTER, "\" }, {0} };\n");
