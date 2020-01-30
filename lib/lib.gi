@@ -3,6 +3,8 @@ LoadPackage("io");
 
 ReadPackage( "gapcpp", "lib/helper_functions.g" );
 
+COMPILE_COUNTER := 1;
+
 InstallMethod(ConstructMethod, [IsString, IsString, IsString, IsInt],
 function(incode, retname, funcname, args)
   local outcode, stream, i;
@@ -15,7 +17,7 @@ function(incode, retname, funcname, args)
   PrintTo(stream, incode,"\n");
   PrintTo(stream, "extern \"C\" {\n");
   
-  PrintTo(stream, "Obj Func", funcname, "(Obj self");
+  PrintTo(stream, "static Obj Func", funcname, "(Obj self");
   for i in [1..args] do
     PrintTo(stream, ", Obj arg", String(i));
   od;
@@ -46,7 +48,7 @@ function(incode, retname, funcname, args)
   PrintTo(stream, "arg");
   PrintTo(stream, "\", ",
                   "(UInt**(*)())Func",funcname,
-                  ", \"nofile.c:1\" }, {0} };\n");
+                  ", \"nofile.c:", COMPILE_COUNTER, "\" }, {0} };\n");
   
   PrintTo(stream, "static Int InitKernel (StructInitInfo* module)\n");
   PrintTo(stream, "{ (void)module; InitHdlrFuncsFromTable( GVarFuncs ); return 0; }\n");
@@ -61,7 +63,7 @@ function(incode, retname, funcname, args)
   "#else\n",
   " /* type        = */ MODULE_DYNAMIC,\n",
   "#endif\n",
-  " /* name        = */ \",funcname,\",\n",
+  " /* name        = */ \"",funcname,"::",COMPILE_COUNTER,"\",\n",
   " /* revision_c  = */ 0,\n",
   " /* revision_h  = */ 0,\n",
   " /* version     = */ 0,\n",
@@ -87,7 +89,7 @@ function(incode, retname, funcname, args)
   "}\n",
   "}\n");
   
-  
+  COMPILE_COUNTER := COMPILE_COUNTER+1;
   return outcode;
 end);
 
