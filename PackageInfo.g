@@ -63,7 +63,7 @@ PackageDoc := rec(
   HTMLStart := "doc/chap0.html",
   PDFFile   := "doc/manual.pdf",
   SixFile   := "doc/manual.six",
-  LongTitle := "Search in finite permutation groups",
+  LongTitle := "Fast linking of C++ code into GAP",
 ),
 
 Dependencies := rec(
