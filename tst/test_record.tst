@@ -8,7 +8,6 @@ gap> f := CompileMethod("""
 > GAPRecord f(int i) { GAPRecord r; r.set("token", i); return r; }""", "f", 1);;
 gap> f(-2);
 rec( token := -2 )
-gap> f := CompileMethod("""
-> int f(GAPRecord r) { return GAP_get<int>(r.get("token")); }""", "f", 1);;
+gap> f := CompileMethod("""int f(GAPRecord r) { return GAP_get<int>(r.get("token")); }""", "f", 1);;
 gap> f(rec(token := 7));
 7
