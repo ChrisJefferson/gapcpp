@@ -39,7 +39,7 @@ PackageWWWHome := "http://ChrisJefferson.github.io/gapcpp/",
 
 ArchiveURL     := Concatenation("https://github.com/gap-system/gapcpp/",
                                 "releases/download/v", ~.Version,
-                                "/ferret-", ~.Version),
+                                "/gapcpp-", ~.Version),
 README_URL     := Concatenation( ~.PackageWWWHome, "README" ),
 PackageInfoURL := Concatenation( ~.PackageWWWHome, "PackageInfo.g" ),
 

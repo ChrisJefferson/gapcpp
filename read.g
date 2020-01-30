@@ -1,6 +1,6 @@
 #############################################################################
 ##
-#W    read.g                 The Ferret package        Christopher Jefferson
+#W    read.g                 The gapcpp package        Christopher Jefferson
 #W
 ##
 

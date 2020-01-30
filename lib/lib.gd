@@ -1,9 +1,9 @@
 #############################################################################
 ##
 ##
-#W  yapb.gd                Ferret Package                Chris Jefferson
+#W  yapb.gd                gapcpp Package                Chris Jefferson
 ##
-##  Declaration file for functions of the Ferret package.
+##  Declaration file for functions of the gapcpp package.
 ##
 #Y  Copyright (C) 1999,2001 University of St. Andrews, North Haugh,
 #Y                          St. Andrews, Fife KY16 9SS, Scotland
