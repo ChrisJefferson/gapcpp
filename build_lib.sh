@@ -18,6 +18,6 @@ MYCFLAGS="-Wall -Wextra -g -I${MY_PATH}/gap_cpp_headers -Wno-pragmas -Wno-cast-f
 
 BUILDSTUFF="-L ${CPPLIB} -o ${mytmpdir}/source.so -d ${mytmpdir}/source.cc"
 
-${GAC}  -p "${MYCFLAGS}"  ${BUILDSTUFF}
+${GAC}  -p "${MYCFLAGS}"  ${BUILDSTUFF} -P "-Wl,-Bsymbolic"
 
 echo ${mytmpdir}
